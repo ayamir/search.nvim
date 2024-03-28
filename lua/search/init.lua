@@ -56,11 +56,17 @@ local open_telescope = function(telescope_opts)
 	tab:start_waiting()
 
 	-- Pass along any telescope options. Set the title to the tab name.
-	telescope_opts = telescope_opts or {}
-	telescope_opts.prompt_title = tab.name
+	local tele_opts = tab.tele_opts or {}
+	tele_opts.prompt_title = tab.name
+
+	-- Merge telescope options passed from different places.
+	-- Merge telescope_opts and tab.tele_opts
+	for k,v in pairs(telescope_opts or {}) do
+		tele_opts[k] = v
+	end
 
 	-- then we spawn the telescope window
-	local success = pcall(tab.tele_func, telescope_opts)
+	local success = pcall(tab.tele_func, tele_opts)
 
 	-- this (only) happens, if the telescope function actually errors out.
 	-- if the telescope window does not open without error, this is not handled here
@@ -223,6 +229,9 @@ M.open = function(opts)
 	local tele_func_opts = {}
 	if opts ~= nil then
 		tele_func_opts = opts.tele_opts or {}
+		if tele_func_opts.default_text == nil then
+			tele_func_opts.default_text = opts.default_text or ""
+		end
 	end
 	open_telescope(tele_func_opts)
 end

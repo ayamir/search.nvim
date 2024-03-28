@@ -134,6 +134,55 @@ require("search").setup({
 })
 ``` 
 
+### Passing options to telescope
+
+#### Passing simple telescope options
+
+Options can be passed to each telescope picker using the `tele_opts` table. 
+
+For example having two tabs, one with hidden files and one without.
+```lua
+local builtin = require('telescope.builtin')
+require("search").setup({
+  initial_tab = 1,
+  tabs = {
+    { name = "Files",      tele_func = builtin.find_files },
+    { name = "All Files",  tele_func = builtin.find_files, tele_opts = { no_ignore = true, hidden = true }},
+  },
+})
+```
+
+#### Passing default_text
+
+The above method should be useful for most use cases. One exception though is passing `default_text` to telescope.
+Since search.nvim persists the prompt between tabs providing a `default_text` to each tab will break it.
+
+Instead default_text can be passed when calling `open`.
+```lua
+require('search').open({ tab_name = 'Grep', default_text = get_visual_selection() })
+-- or
+-- NOTE: tele_opts defined here are only sent to the initial tab.
+require('search').open({ tab_name = 'Grep', tele_opts = { default_text = get_visual_selection() } })
+```
+
+#### Advanced picker configuration
+More advanced use cases are best handled by making your own `tele_func` and handle your logic there.
+
+```lua
+require("search").setup({
+  initial_tab = 1,
+  tabs = {
+    {
+      name = "Files",
+      tele_func = function() 
+        -- Your custom config logic.
+        telescope.find_files({})
+      end 
+    },
+  },
+})
+```
+
 ### known issues
 - pickers with more-than-average loading time (like lsp related, or http sending pickers) can feel a bit off, since the UI will wait for them to be ready.
 - heavily custom configured telescope settings (like in many nvim distros) might lead to unexpected errors, please open an issue if you encounter any.
