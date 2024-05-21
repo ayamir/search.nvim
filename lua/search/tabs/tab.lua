@@ -12,6 +12,7 @@ local Tab = {}
 function Tab:new(tab, id)
 	local name = tab.name or tab[1]
 	local tele_func = tab.tele_func or tab[2]
+	local tele_opts = tab.tele_opts or tab[3]
 
 	-- this enables the user to define the function as second argument
 	-- even if the first argument is named as name
@@ -23,6 +24,7 @@ function Tab:new(tab, id)
 		id = id,
 		name = name,
 		tele_func = tele_func,
+		tele_opts = tele_opts,
 		available_func = tab.available,
 		failed = false,
 		waiting = false,

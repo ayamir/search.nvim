@@ -42,7 +42,7 @@ end
 
 
 --- opens the telescope window and sets the prompt to the one that was used before
-local open_telescope = function()
+local open_telescope = function(telescope_opts)
 	M.busy = true
 	local tab = tabs.current()
 	local prompt = M.current_prompt
@@ -55,10 +55,18 @@ local open_telescope = function()
 	end
 	tab:start_waiting()
 
+	-- Pass along any telescope options. Set the title to the tab name.
+	local tele_opts = tab.tele_opts or {}
+	tele_opts.prompt_title = tab.name
+
+	-- Merge telescope options passed from different places.
+	-- Merge telescope_opts and tab.tele_opts
+	for k,v in pairs(telescope_opts or {}) do
+		tele_opts[k] = v
+	end
+
 	-- then we spawn the telescope window
-	local success = pcall(tab.tele_func, {
-		prompt_title = tab.name,
-	})
+	local success = pcall(tab.tele_func, tele_opts)
 
 	-- this (only) happens, if the telescope function actually errors out.
 	-- if the telescope window does not open without error, this is not handled here
@@ -216,7 +224,16 @@ M.open = function(opts)
 	M.opened_on_win = vim.api.nvim_get_current_win()
 	M.busy = true
 	M.opened_from_buffer = true
-	open_telescope()
+
+	-- Pass along tele_opts to telescope
+	local tele_func_opts = {}
+	if opts ~= nil then
+		tele_func_opts = opts.tele_opts or {}
+		if tele_func_opts.default_text == nil then
+			tele_func_opts.default_text = opts.default_text or ""
+		end
+	end
+	open_telescope(tele_func_opts)
 end
 
 -- configuration
