@@ -2,6 +2,10 @@
 local M = {}
 local builtin = require("telescope.builtin")
 
+M.name = function()
+	return "telescope"
+end
+
 M.open = function(func_or_name, opts)
 	local func = M.get_function(func_or_name)
 	return func(opts)

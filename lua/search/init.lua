@@ -91,16 +91,13 @@ local open_prompt = function(telescope_opts)
 
 			util.set_keymap(vim.api.nvim_get_current_buf(), settings.keys)
 
-			vim.api.nvim_feedkeys(prompt, "t", true)
-
-			-- If keymaps for navigating panes are defined in normal mode, the prompt should remain in normal mode to allow
-			-- navigating multiple maps at a time.
-			-- If the mode was normal mode before the tab change, then change back to normal mode. This is unless the search
-			-- is being opened using open(), since then then user could be using normal mode in their previous active buffer.
-			if mode == "n" and M.opened_from_buffer == false then
-				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+			if engine.name() == "telescope" then
+				vim.api.nvim_feedkeys(prompt, "t", true)
+				if mode == "n" and M.opened_from_buffer == false then
+					vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+				end
+				M.opened_from_buffer = false
 			end
-			M.opened_from_buffer = false
 
 			-- TODO: find a better way to do this - defer_fn will work, but will also cause some kind of redrawing
 			-- using vim.wait(n) does not work

@@ -30,7 +30,6 @@ M.defaults = {
 	},
 }
 
--- 在 M 表中添加
 M.engine = "telescope"
 
 M.setup = function(opts)
@@ -53,7 +52,6 @@ M.setup = function(opts)
 		collections = opts.collections
 	end
 
-	-- 在 setup 函数中添加
 	if opts.engine ~= nil then
 		M.engine = opts.engine
 	end

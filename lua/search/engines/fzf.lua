@@ -1,6 +1,10 @@
 local M = {}
 local fzf = require("fzf-lua")
 
+M.name = function()
+	return "fzf"
+end
+
 M.open = function(func_name, opts)
 	local fzf_opts = M.convert_opts(opts)
 
@@ -9,7 +13,6 @@ M.open = function(func_name, opts)
 	return func(fzf_opts)
 end
 
--- 从 telescope 函数映射到 fzf-lua 函数
 M.get_function = function(func_or_name)
 	local function_map = {
 		["find_files"] = fzf.files,
@@ -24,7 +27,6 @@ M.get_function = function(func_or_name)
 	end
 end
 
--- 转换选项格式
 M.convert_opts = function(telescope_opts)
 	local fzf_opts = {}
 
@@ -39,7 +41,6 @@ M.convert_opts = function(telescope_opts)
 	return fzf_opts
 end
 
--- 获取命令行内容
 M.get_prompt = function()
 	local line = vim.api.nvim_get_current_line()
 	line = line:gsub("^%s*[^%w%.%-_/]*", "")
