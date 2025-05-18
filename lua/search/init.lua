@@ -6,32 +6,31 @@ local tab_bar = require("search.tab_bar")
 local tabs = require("search.tabs")
 
 --- opens the tab window and anchors it to the telescope window
---- @param telescope_win_id number the id of the telescope window
+--- @param win_id number the id of the telescope window
 --- @return nil
-local tab_window = function(telescope_win_id)
-	-- the width of the prompt
-	local telescope_width = vim.fn.winwidth(telescope_win_id)
-	local telescope_height = vim.fn.winheight(telescope_win_id)
+local tab_window = function(win_id)
+	local prompt_width = vim.fn.winwidth(win_id)
+	local prompt_height = vim.fn.winheight(win_id)
 
 	-- if the telescope window is closed, we exit early
 	-- this can happen when the user holds down the tab key
-	if telescope_width == -1 then
+	if prompt_width == -1 then
 		return
 	end
 
-	-- create the tab bar window, anchoring it to the telescope window
+	-- create the tab bar window, anchoring it to the prompt window
 	local tab_bar_win = tab_bar.create({
 		relative = "win",
-		win = telescope_win_id,
-		width = telescope_width,
+		win = win_id,
+		width = prompt_width,
 		col = 0,
-		row = telescope_height + 1,
+		row = prompt_height + 1,
 	})
 
-	-- make this window disappear when the telescope window is closed
-	local tele_buf = vim.api.nvim_get_current_buf()
+	-- make this window disappear when the prompt window is closed
+	local prompt_bufnr = vim.api.nvim_get_current_buf()
 	vim.api.nvim_create_autocmd("WinLeave", {
-		buffer = tele_buf,
+		buffer = prompt_bufnr,
 		nested = true,
 		once = true,
 		callback = function()
@@ -41,7 +40,7 @@ local tab_window = function(telescope_win_id)
 end
 
 --- opens the telescope window and sets the prompt to the one that was used before
-local open_telescope = function(telescope_opts)
+local open_prompt = function(telescope_opts)
 	M.busy = true
 	local tab = tabs.current()
 	local prompt = M.current_prompt
@@ -149,7 +148,7 @@ M.next_tab = function(remember)
 		M.remember_prompt()
 	end
 
-	open_telescope()
+	open_prompt()
 end
 
 --- switches to the previous tab, preserving the prompt
@@ -166,7 +165,7 @@ M.previous_tab = function(remember)
 		M.remember_prompt()
 	end
 
-	open_telescope()
+	open_prompt()
 end
 
 --- remembers the prompt that was used before
@@ -224,7 +223,7 @@ M.open = function(opts)
 			tele_func_opts.default_text = opts.default_text or ""
 		end
 	end
-	open_telescope(tele_func_opts)
+	open_prompt(tele_func_opts)
 end
 
 -- configuration
