@@ -30,7 +30,7 @@ M.make = function(buf_id, max_width)
 			current_row = ""
 		end
 
-		local group = "";
+		local group = ""
 		if tab:is_current(collection) then
 			group = "ActiveSearchTab"
 		end
@@ -49,7 +49,7 @@ M.make = function(buf_id, max_width)
 				s = #current_row,
 				e = #current_row + #tab_name,
 				r = #content,
-				g = group
+				g = group,
 			})
 		end
 		current_row = current_row .. tab_name .. M.seperator
@@ -61,10 +61,10 @@ M.make = function(buf_id, max_width)
 
 	vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, content)
 	-- Other highlight groups can be found at https://neovim.io/doc/user/syntax.html#%3Ahighlight
-	vim.api.nvim_set_hl(0, 'ActiveSearchTab', vim.api.nvim_get_hl(0, {name="IncSearch"}))
-	vim.api.nvim_set_hl(0, 'FailedSearchTab', vim.api.nvim_get_hl(0, {name="Error"}))
-	vim.api.nvim_set_hl(0, 'InactiveSearchTab', vim.api.nvim_get_hl(0, {name="Conceal"}))
-	vim.api.nvim_set_hl(0, 'WaitingSearchTab', vim.api.nvim_get_hl(0, {name="PmenuKind"}))
+	vim.api.nvim_set_hl(0, "ActiveSearchTab", vim.api.nvim_get_hl(0, { name = "IncSearch" }))
+	vim.api.nvim_set_hl(0, "FailedSearchTab", vim.api.nvim_get_hl(0, { name = "Error" }))
+	vim.api.nvim_set_hl(0, "InactiveSearchTab", vim.api.nvim_get_hl(0, { name = "Conceal" }))
+	vim.api.nvim_set_hl(0, "WaitingSearchTab", vim.api.nvim_get_hl(0, { name = "PmenuKind" }))
 	for _, group in ipairs(hil_groups) do
 		vim.api.nvim_buf_add_highlight(buf_id, -1, group.g, group.r, group.s, group.e)
 	end
@@ -72,11 +72,10 @@ M.make = function(buf_id, max_width)
 	return {
 		width = max_width,
 		height = #content,
-		style = 'minimal',
+		style = "minimal",
 		focusable = false,
 		noautocmd = true,
 	}
 end
-
 
 return M

@@ -1,10 +1,9 @@
 local M = {}
 
-local util = require('search.util')
-local settings = require('search.settings')
-local tab_bar = require('search.tab_bar')
-local tabs = require('search.tabs')
-
+local util = require("search.util")
+local settings = require("search.settings")
+local tab_bar = require("search.tab_bar")
+local tabs = require("search.tabs")
 
 --- opens the tab window and anchors it to the telescope window
 --- @param telescope_win_id number the id of the telescope window
@@ -12,6 +11,7 @@ local tabs = require('search.tabs')
 local tab_window = function(telescope_win_id)
 	-- the width of the prompt
 	local telescope_width = vim.fn.winwidth(telescope_win_id)
+	local telescope_height = vim.fn.winheight(telescope_win_id)
 
 	-- if the telescope window is closed, we exit early
 	-- this can happen when the user holds down the tab key
@@ -21,11 +21,11 @@ local tab_window = function(telescope_win_id)
 
 	-- create the tab bar window, anchoring it to the telescope window
 	local tab_bar_win = tab_bar.create({
-		width = telescope_width,
-		relative = 'win',
+		relative = "win",
 		win = telescope_win_id,
+		width = telescope_width,
 		col = 0,
-		row = 2,
+		row = telescope_height + 1,
 	})
 
 	-- make this window disappear when the telescope window is closed
@@ -40,13 +40,13 @@ local tab_window = function(telescope_win_id)
 	})
 end
 
-
 --- opens the telescope window and sets the prompt to the one that was used before
 local open_telescope = function(telescope_opts)
 	M.busy = true
 	local tab = tabs.current()
 	local prompt = M.current_prompt
 	local mode = vim.api.nvim_get_mode().mode
+	local engine = require("search.engines").load(require("search.settings").engine)
 
 	-- since some telescope functions are linked to lsp, we need to make sure that we are in the correct buffer
 	-- this would become an issue if we are coming from another tab
@@ -61,12 +61,14 @@ local open_telescope = function(telescope_opts)
 
 	-- Merge telescope options passed from different places.
 	-- Merge telescope_opts and tab.tele_opts
-	for k,v in pairs(telescope_opts or {}) do
+	for k, v in pairs(telescope_opts or {}) do
 		tele_opts[k] = v
 	end
 
 	-- then we spawn the telescope window
-	local success = pcall(tab.tele_func, tele_opts)
+	local success = pcall(function()
+		engine.open(tab.tele_func, tele_opts)
+	end)
 
 	-- this (only) happens, if the telescope function actually errors out.
 	-- if the telescope window does not open without error, this is not handled here
@@ -77,27 +79,27 @@ local open_telescope = function(telescope_opts)
 		return
 	end
 
-
 	-- find a better way to do this
 	-- we might need to wait for the telescope window to open
-	util.do_when(function()
+	util.do_when(
+		function()
 			-- wait for the window change
 			return M.opened_on_win ~= vim.api.nvim_get_current_win()
 		end,
 		function()
 			tab:stop_waiting()
 			local current_win_id = vim.api.nvim_get_current_win()
-			util.set_keymap()
 
-			-- now we set the prompt to the one we had before
-			vim.api.nvim_feedkeys(prompt, 't', true)
+			util.set_keymap(vim.api.nvim_get_current_buf(), settings.keys)
+
+			vim.api.nvim_feedkeys(prompt, "t", true)
 
 			-- If keymaps for navigating panes are defined in normal mode, the prompt should remain in normal mode to allow
 			-- navigating multiple maps at a time.
 			-- If the mode was normal mode before the tab change, then change back to normal mode. This is unless the search
 			-- is being opened using open(), since then then user could be using normal mode in their previous active buffer.
 			if mode == "n" and M.opened_from_buffer == false then
-				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), 'n', false)
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
 			end
 			M.opened_from_buffer = false
 
@@ -169,10 +171,8 @@ end
 
 --- remembers the prompt that was used before
 M.remember_prompt = function()
-	local current_prompt = vim.api.nvim_get_current_line()
-	-- removing the prefix, by cutting the length
-	local without_prefix = string.sub(current_prompt, M.prefix_len + 1)
-	M.current_prompt = without_prefix
+	local engine = require("search.engines").load(settings.engine)
+	M.current_prompt = engine.get_prompt()
 end
 
 --- resets the state of the search module
@@ -197,11 +197,6 @@ M.reset = function(opts)
 	M.opened_from_buffer = true
 end
 
--- the prefix can be defined in the telescope config, so we need to read
--- it's length in the open() method.
--- @todo: maybe do the reading somewhere else, to avoid doing so multiple times
-M.prefix_len = 2
-
 M.opened_on_win = -1
 
 M.opened_from_buffer = true
@@ -209,16 +204,12 @@ M.opened_from_buffer = true
 --- opens the telescope window with the current prompt
 --- this is the function that should be called from the outside
 M.open = function(opts)
-
 	-- TODO: find a better way to do this
 	-- this is just a workaround to make sure that the settings are initialized
 	-- if the user did not call setup() themselves
 	if not settings.initialized then
 		settings.setup()
 	end
-
-	local prefix = require("telescope.config").values.prompt_prefix or "> "
-	M.prefix_len = #prefix
 
 	M.reset(opts)
 	M.opened_on_win = vim.api.nvim_get_current_win()

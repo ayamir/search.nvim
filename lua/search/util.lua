@@ -30,30 +30,27 @@ M.do_when = function(condition, callback, max_ms, fail_callback)
 	end
 end
 
-
---- binds the tab key to the next tab
---- and the shift tab key to the previous tab
-M.set_keymap = function()
-	-- now we bind our tab key to the next tab
+M.set_keymap = function(buf_id, keys)
 	local opts = { noremap = true, silent = true }
-	local cmd = "<cmd>lua require('search').next_tab()<CR>"
-	local cmd_p = "<cmd>lua require('search').previous_tab()<CR>"
+	local next_cmd = "<cmd>lua require('search').next_tab()<CR>"
+	local prev_cmd = "<cmd>lua require('search').previous_tab()<CR>"
 
+	local function set_mapping(keymap, cmd)
+		-- set keymap for fzf
+		vim.api.nvim_buf_set_keymap(buf_id, "t", keymap, cmd, opts)
+		if type(keymap) == "string" then
+			vim.api.nvim_buf_set_keymap(buf_id, "n", keymap, cmd, opts)
+			vim.api.nvim_buf_set_keymap(buf_id, "i", keymap, cmd, opts)
+		else
+			for _, value in ipairs(keymap) do
+				vim.api.nvim_buf_set_keymap(buf_id, value[2], value[1], cmd, opts)
+			end
+		end
+	end
 
-  local function set_keymap(keymap, cmd)
-    if type(keymap) == "string" then
-      vim.api.nvim_buf_set_keymap(0, 'n', keymap, cmd, opts)
-      vim.api.nvim_buf_set_keymap(0, 'i', keymap, cmd, opts)
-    else
-      for _, value in ipairs(keymap) do
-        vim.api.nvim_buf_set_keymap(0, value[2], value[1], cmd, opts)
-      end
-    end
-  end
-
-  set_keymap(settings.keys.next, cmd)
-  set_keymap(settings.keys.prev, cmd_p)
-  end
+	set_mapping(keys.next, next_cmd)
+	set_mapping(keys.prev, prev_cmd)
+end
 
 --- switches to the next available tab
 --- @return Tab # the next available tab
@@ -84,4 +81,5 @@ M.previous_available = function()
 		end
 	end
 end
-return M;
+
+return M

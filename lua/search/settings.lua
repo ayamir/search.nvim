@@ -11,7 +11,7 @@ M.default_keys = {
 
 M.keys = vim.deepcopy(M.default_keys)
 
-local builtin = require('telescope.builtin')
+local builtin = require("telescope.builtin")
 M.defaults = {
 	{
 		"Files",
@@ -22,13 +22,16 @@ M.defaults = {
 		builtin.git_files,
 		available = function()
 			return vim.fn.isdirectory(".git") == 1
-		end
+		end,
 	},
 	{
 		"Grep",
 		builtin.live_grep,
 	},
 }
+
+-- 在 M 表中添加
+M.engine = "telescope"
 
 M.setup = function(opts)
 	opts = opts or {}
@@ -48,6 +51,11 @@ M.setup = function(opts)
 
 	if opts.collections ~= nil then
 		collections = opts.collections
+	end
+
+	-- 在 setup 函数中添加
+	if opts.engine ~= nil then
+		M.engine = opts.engine
 	end
 
 	-- if the user has specified a custom list of tabs to append, append
@@ -82,6 +90,5 @@ M.setup = function(opts)
 
 	M.initialized = true
 end
-
 
 return M

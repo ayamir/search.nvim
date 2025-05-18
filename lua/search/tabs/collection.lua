@@ -1,5 +1,4 @@
-
-local Tab = require('search.tabs.tab')
+local Tab = require("search.tabs.tab")
 
 local TabCollection = {}
 
@@ -79,7 +78,7 @@ end
 --- @param name string the name of the tab
 --- @return boolean # true if the tab was found, false otherwise
 function TabCollection:set_by_name(name)
-	local tab = self:id_by_name( name)
+	local tab = self:id_by_name(name)
 	if tab then
 		self.current_id = tab.id
 		return true
