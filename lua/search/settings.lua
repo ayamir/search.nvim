@@ -32,6 +32,8 @@ M.defaults = {
 
 M.engine = "telescope"
 
+M.prompt_position = "top"
+
 M.setup = function(opts)
 	opts = opts or {}
 
@@ -54,6 +56,10 @@ M.setup = function(opts)
 
 	if opts.engine ~= nil then
 		M.engine = opts.engine
+	end
+
+	if opts.prompt_position ~= nil then
+		M.prompt_position = opts.prompt_position
 	end
 
 	-- if the user has specified a custom list of tabs to append, append

@@ -9,8 +9,7 @@ local tabs = require("search.tabs")
 --- @param win_id number the id of the telescope window
 --- @return nil
 local tab_window = function(win_id)
-	local prompt_width = vim.fn.winwidth(win_id)
-	local prompt_height = vim.fn.winheight(win_id)
+	local row = settings.prompt_position == "top" and -2 or vim.fn.winheight(win_id) + 2
 
 	-- if the telescope window is closed, we exit early
 	-- this can happen when the user holds down the tab key
@@ -22,9 +21,9 @@ local tab_window = function(win_id)
 	local tab_bar_win = tab_bar.create({
 		relative = "win",
 		win = win_id,
-		width = prompt_width,
+		width = vim.fn.winwidth(win_id),
 		col = 0,
-		row = prompt_height + 1,
+		row = row,
 	})
 
 	-- make this window disappear when the prompt window is closed
