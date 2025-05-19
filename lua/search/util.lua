@@ -1,7 +1,6 @@
 local M = {}
 
 local tabs = require("search.tabs")
-local settings = require("search.settings")
 
 --- the amount of milliseconds to wait between checks
 M.await_time = 10
@@ -50,6 +49,38 @@ M.set_keymap = function(buf_id, keys)
 
 	set_mapping(keys.next, next_cmd)
 	set_mapping(keys.prev, prev_cmd)
+end
+
+M.get_prompt = function(line)
+	line = vim.trim(line)
+	local is_telescope_prompt = line:match("%d+/%d+ %(%d+%)$") == nil
+	if is_telescope_prompt then
+		local prefix_len = #require("telescope.config").values.prompt_prefix or "> "
+		local prompt = vim.trim(string.sub(line, prefix_len))
+		vim.notify("telescope prompt: " .. prompt)
+		return prompt
+	end
+
+	line = line:gsub("^%s*[^%w%.%-_/]*", "")
+
+	local parts = {}
+	for word in line:gmatch("%S+") do
+		table.insert(parts, word)
+	end
+	if #parts < 3 then
+		return ""
+	end
+
+	local path = parts[#parts - 2]
+
+	if path:sub(-1) == "/" then
+		return ""
+	end
+
+	local prompt = vim.trim(path:match("([^/]+)$"))
+	prompt = vim.api.nvim_replace_termcodes(prompt, true, true, true)
+	vim.notify("fzf prompt: " .. prompt)
+	return prompt
 end
 
 --- switches to the next available tab

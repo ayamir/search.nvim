@@ -39,12 +39,10 @@ local tab_window = function(win_id)
 end
 
 --- opens the telescope window and sets the prompt to the one that was used before
-local open_prompt = function(telescope_opts)
+local open_prompt = function(prompt, opts)
 	M.busy = true
 	local tab = tabs.current()
-	local prompt = M.current_prompt
 	local mode = vim.api.nvim_get_mode().mode
-	local engine = require("search.engines").load(require("search.settings").engine)
 
 	-- since some telescope functions are linked to lsp, we need to make sure that we are in the correct buffer
 	-- this would become an issue if we are coming from another tab
@@ -59,14 +57,11 @@ local open_prompt = function(telescope_opts)
 
 	-- Merge telescope options passed from different places.
 	-- Merge telescope_opts and tab.tele_opts
-	for k, v in pairs(telescope_opts or {}) do
+	for k, v in pairs(opts or {}) do
 		tele_opts[k] = v
 	end
 
-	-- then we spawn the telescope window
-	local success = pcall(function()
-		engine.open(tab.tele_func, tele_opts)
-	end)
+	local success = pcall(tab.tele_func, tele_opts)
 
 	-- this (only) happens, if the telescope function actually errors out.
 	-- if the telescope window does not open without error, this is not handled here
@@ -90,13 +85,12 @@ local open_prompt = function(telescope_opts)
 
 			util.set_keymap(vim.api.nvim_get_current_buf(), settings.keys)
 
-			if engine.name() == "telescope" then
-				vim.api.nvim_feedkeys(prompt, "t", true)
-				if mode == "n" and M.opened_from_buffer == false then
-					vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-				end
-				M.opened_from_buffer = false
+			-- vim.api.nvim_input(prompt)
+
+			if mode == "n" and M.opened_from_buffer == false then
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
 			end
+			M.opened_from_buffer = false
 
 			-- TODO: find a better way to do this - defer_fn will work, but will also cause some kind of redrawing
 			-- using vim.wait(n) does not work
@@ -140,11 +134,12 @@ M.next_tab = function(remember)
 	end
 	util.next_available()
 
+	local prompt = ""
 	if remember then
-		M.remember_prompt()
+		prompt = util.get_prompt(vim.api.nvim_get_current_line())
 	end
 
-	open_prompt()
+	open_prompt(prompt)
 end
 
 --- switches to the previous tab, preserving the prompt
@@ -157,19 +152,15 @@ M.previous_tab = function(remember)
 	end
 	util.previous_available()
 
+	local prompt = ""
 	if remember then
-		M.remember_prompt()
+		prompt = util.get_prompt(vim.api.nvim_get_current_line())
 	end
 
-	open_prompt()
+	open_prompt(prompt)
 end
 
 --- remembers the prompt that was used before
-M.remember_prompt = function()
-	local engine = require("search.engines").load(settings.engine)
-	M.current_prompt = engine.get_prompt()
-end
-
 --- resets the state of the search module
 M.reset = function(opts)
 	opts = opts or {}
@@ -219,7 +210,7 @@ M.open = function(opts)
 			tele_func_opts.default_text = opts.default_text or ""
 		end
 	end
-	open_prompt(tele_func_opts)
+	open_prompt("", tele_func_opts)
 end
 
 -- configuration

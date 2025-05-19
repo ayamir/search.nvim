@@ -30,8 +30,6 @@ M.defaults = {
 	},
 }
 
-M.engine = "telescope"
-
 M.prompt_position = "top"
 
 M.setup = function(opts)
@@ -52,10 +50,6 @@ M.setup = function(opts)
 
 	if opts.collections ~= nil then
 		collections = opts.collections
-	end
-
-	if opts.engine ~= nil then
-		M.engine = opts.engine
 	end
 
 	if opts.prompt_position ~= nil then
