@@ -42,7 +42,6 @@ end
 local open_prompt = function(prompt, opts)
 	M.busy = true
 	local tab = tabs.current()
-	local mode = vim.api.nvim_get_mode().mode
 
 	-- since some telescope functions are linked to lsp, we need to make sure that we are in the correct buffer
 	-- this would become an issue if we are coming from another tab
@@ -82,22 +81,10 @@ local open_prompt = function(prompt, opts)
 		function()
 			tab:stop_waiting()
 			local current_win_id = vim.api.nvim_get_current_win()
-
 			util.set_keymap(vim.api.nvim_get_current_buf(), settings.keys)
-
-			-- vim.api.nvim_input(prompt)
-
-			if mode == "n" and M.opened_from_buffer == false then
-				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-			end
-			M.opened_from_buffer = false
-
-			-- TODO: find a better way to do this - defer_fn will work, but will also cause some kind of redrawing
-			-- using vim.wait(n) does not work
-			vim.defer_fn(function()
-				tab_window(current_win_id)
-				M.busy = false
-			end, 4)
+			vim.api.nvim_input(prompt)
+			tab_window(current_win_id)
+			M.busy = false
 		end,
 		2000, -- wait for 2 second at most
 		function()
@@ -107,9 +94,6 @@ local open_prompt = function(prompt, opts)
 		end
 	)
 end
-
---- the prompt that was used before
-M.current_prompt = ""
 
 M.direction = "next"
 
@@ -180,12 +164,9 @@ M.reset = function(opts)
 
 	M.current_prompt = ""
 	M.opened_on_win = -1
-	M.opened_from_buffer = true
 end
 
 M.opened_on_win = -1
-
-M.opened_from_buffer = true
 
 --- opens the telescope window with the current prompt
 --- this is the function that should be called from the outside
@@ -200,7 +181,6 @@ M.open = function(opts)
 	M.reset(opts)
 	M.opened_on_win = vim.api.nvim_get_current_win()
 	M.busy = true
-	M.opened_from_buffer = true
 
 	-- Pass along tele_opts to telescope
 	local tele_func_opts = {}

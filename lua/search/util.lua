@@ -31,17 +31,19 @@ end
 
 M.set_keymap = function(buf_id, keys)
 	local opts = { noremap = true, silent = true }
-	local next_cmd = "<cmd>lua require('search').next_tab()<CR>"
-	local prev_cmd = "<cmd>lua require('search').previous_tab()<CR>"
+	local next_cmd = "<C-\\><C-n><cmd>lua require('search').next_tab()<CR>"
+	local prev_cmd = "<C-\\><C-n><cmd>lua require('search').previous_tab()<CR>"
 
 	local function set_mapping(keymap, cmd)
-		-- set keymap for fzf
-		vim.api.nvim_buf_set_keymap(buf_id, "t", keymap, cmd, opts)
 		if type(keymap) == "string" then
+			-- set keymap for fzf
+			vim.api.nvim_buf_set_keymap(buf_id, "t", keymap, cmd, opts)
 			vim.api.nvim_buf_set_keymap(buf_id, "n", keymap, cmd, opts)
 			vim.api.nvim_buf_set_keymap(buf_id, "i", keymap, cmd, opts)
 		else
 			for _, value in ipairs(keymap) do
+				-- set keymap for fzf
+				vim.api.nvim_buf_set_keymap(buf_id, "t", value[1], cmd, opts)
 				vim.api.nvim_buf_set_keymap(buf_id, value[2], value[1], cmd, opts)
 			end
 		end
@@ -57,7 +59,6 @@ M.get_prompt = function(line)
 	if is_telescope_prompt then
 		local prefix_len = #require("telescope.config").values.prompt_prefix or "> "
 		local prompt = vim.trim(string.sub(line, prefix_len))
-		vim.notify("telescope prompt: " .. prompt)
 		return prompt
 	end
 
@@ -79,7 +80,6 @@ M.get_prompt = function(line)
 
 	local prompt = vim.trim(path:match("([^/]+)$"))
 	prompt = vim.api.nvim_replace_termcodes(prompt, true, true, true)
-	vim.notify("fzf prompt: " .. prompt)
 	return prompt
 end
 
