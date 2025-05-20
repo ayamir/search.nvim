@@ -8,7 +8,7 @@ local tabs = require("search.tabs")
 --- opens the tab window and anchors it to the telescope window
 --- @param win_id number the id of the telescope window
 --- @return nil
-local tab_window = function(win_id)
+local open_tab_bar = function(win_id)
 	local row = settings.prompt_position == "top" and -2 or vim.fn.winheight(win_id) + 1
 
 	-- if the telescope window is closed, we exit early
@@ -38,6 +38,7 @@ local tab_window = function(win_id)
 	})
 end
 
+M.current_prompt_win = -1
 --- opens the telescope window and sets the prompt to the one that was used before
 local open_prompt = function(prompt, opts)
 	M.busy = true
@@ -83,8 +84,11 @@ local open_prompt = function(prompt, opts)
 			local current_win_id = vim.api.nvim_get_current_win()
 			util.set_keymap(vim.api.nvim_get_current_buf(), settings.keys)
 			vim.api.nvim_input(prompt)
-			tab_window(current_win_id)
-			M.busy = false
+			vim.defer_fn(function()
+				open_tab_bar(current_win_id)
+				M.current_prompt_win = current_win_id
+				M.busy = false
+			end, 2)
 		end,
 		2000, -- wait for 2 second at most
 		function()
@@ -107,6 +111,12 @@ M.continue_tab = function(remember)
 	end
 end
 
+M.close_prompt = function()
+	if M.current_prompt_win ~= -1 and vim.api.nvim_win_is_valid(M.current_prompt_win) then
+		vim.api.nvim_win_close(M.current_prompt_win, true)
+		M.current_prompt_win = -1
+	end
+end
 --- switches to the next tab, preserving the prompt
 --- only switches to tabs that are available
 M.next_tab = function(remember)
@@ -123,6 +133,7 @@ M.next_tab = function(remember)
 		prompt = util.get_prompt(vim.api.nvim_get_current_line())
 	end
 
+	M.close_prompt()
 	open_prompt(prompt)
 end
 
@@ -141,6 +152,7 @@ M.previous_tab = function(remember)
 		prompt = util.get_prompt(vim.api.nvim_get_current_line())
 	end
 
+	M.close_prompt()
 	open_prompt(prompt)
 end
 
