@@ -10,7 +10,7 @@ local tabs = require("search.tabs")
 --- @return nil
 local open_tab_bar = function(win_id)
 	local row = settings.prompt_position == "top" and -2 or vim.fn.winheight(win_id) + 1
-
+	local prompt_width = vim.fn.winwidth(win_id)
 	-- if the telescope window is closed, we exit early
 	-- this can happen when the user holds down the tab key
 	if prompt_width == -1 then
@@ -21,7 +21,7 @@ local open_tab_bar = function(win_id)
 	local tab_bar_win = tab_bar.create({
 		relative = "win",
 		win = win_id,
-		width = vim.fn.winwidth(win_id),
+		width = prompt_width,
 		col = 0,
 		row = row,
 	})
@@ -40,6 +40,9 @@ end
 
 M.current_prompt_win = -1
 --- opens the telescope window and sets the prompt to the one that was used before
+--- @param prompt string the prompt that was used before
+--- @param opts table|nil the options that were used before
+--- @return nil
 local open_prompt = function(prompt, opts)
 	M.busy = true
 	local tab = tabs.current()
@@ -103,6 +106,9 @@ M.direction = "next"
 
 M.busy = false
 
+--- continue to next or previous tab
+--- @param remember boolean whether to remember the prompt
+--- @return nil
 M.continue_tab = function(remember)
 	if M.direction == "next" then
 		M.next_tab(remember)
@@ -117,6 +123,7 @@ M.close_prompt = function()
 		M.current_prompt_win = -1
 	end
 end
+
 --- switches to the next tab, preserving the prompt
 --- only switches to tabs that are available
 M.next_tab = function(remember)
