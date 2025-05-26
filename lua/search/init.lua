@@ -27,13 +27,14 @@ local open_tab_bar = function(win_id)
 	})
 
 	-- make this window disappear when the prompt window is closed
-	local prompt_bufnr = vim.api.nvim_get_current_buf()
-	vim.api.nvim_create_autocmd("WinLeave", {
-		buffer = prompt_bufnr,
+	vim.api.nvim_create_autocmd("WinClosed", {
+		pattern = tostring(win_id),
 		nested = true,
 		once = true,
 		callback = function()
-			vim.api.nvim_win_close(tab_bar_win, true)
+			if vim.api.nvim_win_is_valid(tab_bar_win) then
+				vim.api.nvim_win_close(tab_bar_win, true)
+			end
 		end,
 	})
 end
